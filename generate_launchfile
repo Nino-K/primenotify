@@ -13,7 +13,7 @@ cat << EOF | sudo tee /Library/LaunchAgents/com.github.primenotify.plist
   <string>--config=$HOME/primenotify/config.json</string>
 </array>
 <key>StartInterval</key>
-<integer>60</integer>
+<integer>600</integer>
 </dict>
 </plist>
 EOF
