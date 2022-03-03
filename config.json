@@ -1,5 +1,5 @@
 {
-        "expected_rate": 3.45,
+    "expected_rate": 3.45,
 	"url": "https://www.tdcanadatrust.com/customer-service/todays-rates/td-prime/prime-rate.jsp",
 	"from": "email@gmail.com",
 	"recipients": ["email@gmail.com", "email2@gmail.com"],

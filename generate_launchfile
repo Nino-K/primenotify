@@ -10,7 +10,7 @@ cat << EOF | sudo tee /Library/LaunchAgents/com.github.primenotify.plist
 <key>ProgramArguments</key>
 <array>
   <string>$HOME/primenotify/checker</string>
-  <string>--config=$HOME/primenotify/config.json</string>
+  <string>--path=$HOME/primenotify/config.json</string>
 </array>
 <key>StartInterval</key>
 <integer>600</integer>

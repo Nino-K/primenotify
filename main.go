@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/smtp"
@@ -15,7 +16,7 @@ import (
 	"strings"
 )
 
-var conf = flag.String("config", "", "Path to a configuration file")
+var configPath = flag.String("path", "", "Path to a configuration file")
 
 type Config struct {
 	ExpectedRate float32  `json:"expected_rate"`
@@ -29,11 +30,11 @@ type Config struct {
 
 func main() {
 	flag.Parse()
-	if *conf == "" {
-		log.Fatal("path to a configuration file must be privided")
+	if *configPath == "" {
+		log.Fatal("path to a configuration file must be provided")
 	}
 	config := new(Config)
-	configFile, err := os.Open(*conf)
+	configFile, err := os.Open(*configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,11 +45,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(config)
 	c := contents(config.URL)
 	currentRate := findPrimeRate(c)
 	if currentRate != config.ExpectedRate {
-		sendEmail(config, currentRate)
+		err := sendEmail(config, currentRate)
+		if err != nil {
+			log.Fatal(err)
+		}
+		config.ExpectedRate = currentRate
+		b, err := json.Marshal(config)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = ioutil.WriteFile(*configPath, b, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -91,15 +103,12 @@ func convertRates(rates []string) []float32 {
 	return fRates
 }
 
-func sendEmail(config *Config, rate float32) {
+func sendEmail(config *Config, rate float32) error {
 	auth := smtp.PlainAuth("", config.From, config.SMTPAuth, config.SMTPAddr)
 	msg := "From: " + config.From + "\n" +
 		"To: " + strings.Join(config.Recipients, ",") + "\n" +
 		"Subject: IMPORTANT PRIME RATE CHANGES\n\n" +
 		"Prime rate today has gone up to" + fmt.Sprintf("%6.2f\n", rate)
 	fmt.Println(msg)
-	err := smtp.SendMail(fmt.Sprintf("%s:%d", config.SMTPAddr, config.SMTPPort), auth, config.From, config.Recipients, []byte(msg))
-	if err != nil {
-		log.Fatal(err)
-	}
+	return smtp.SendMail(fmt.Sprintf("%s:%d", config.SMTPAddr, config.SMTPPort), auth, config.From, config.Recipients, []byte(msg))
 }
